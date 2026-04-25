@@ -1,0 +1,54 @@
+{
+  "id": "e3b0c442-98fc-1c14-9afb-f4c8996fb924",
+  "version": "1.0.0",
+  "generator": { "name": "sampler", "version": "1.0.0" },
+  "title":   { "en": "Sampler" },
+  "logline": { "en": "A tiny ScreenJSON document exercising every element type." },
+  "lang": "en",
+  "charset": "utf-8",
+  "dir": "ltr",
+  "authors": [
+    { "id": "00000000-0000-4000-8000-000000000001", "given": "Jordan", "family": "Lee" }
+  ],
+  "characters": [
+    { "id": "00000000-0000-4000-8000-000000000010", "name": "MARA",  "traits": ["lead", "thief"] },
+    { "id": "00000000-0000-4000-8000-000000000011", "name": "ELLIS", "traits": ["foil"] }
+  ],
+  "document": {
+    "cover": {
+      "title":   { "en": "Sampler" },
+      "authors": ["00000000-0000-4000-8000-000000000001"]
+    },
+    "scenes": [
+      {
+        "id": "00000000-0000-4000-8000-0000000000a1",
+        "authors": ["00000000-0000-4000-8000-000000000001"],
+        "heading": { "no": 1, "context": "INT.", "setting": "VAULT — SUB-LEVEL 3", "time": "NIGHT" },
+        "cast":    ["00000000-0000-4000-8000-000000000010", "00000000-0000-4000-8000-000000000011"],
+        "body": [
+          { "id": "00000000-0000-4000-8000-0000000000b1", "type": "action", "authors": ["00000000-0000-4000-8000-000000000001"], "text": { "en": "A single bulb flickers over a grey steel vault door. MARA, 30s, coat pulled tight, studies the lock. ELLIS, 40s, paces behind her." } },
+          { "id": "00000000-0000-4000-8000-0000000000b2", "type": "shot",   "authors": ["00000000-0000-4000-8000-000000000001"], "text": { "en": "CLOSE ON MARA'S HANDS" } },
+          { "id": "00000000-0000-4000-8000-0000000000b3", "type": "action", "authors": ["00000000-0000-4000-8000-000000000001"], "text": { "en": "as she dials in a code from memory. Five numbers. The lock clicks." } },
+          { "id": "00000000-0000-4000-8000-0000000000b4", "type": "character", "authors": ["00000000-0000-4000-8000-000000000001"], "character": "00000000-0000-4000-8000-000000000010" },
+          { "id": "00000000-0000-4000-8000-0000000000b5", "type": "parenthetical", "authors": ["00000000-0000-4000-8000-000000000001"], "text": { "en": "whispering" } },
+          { "id": "00000000-0000-4000-8000-0000000000b6", "type": "dialogue", "authors": ["00000000-0000-4000-8000-000000000001"], "character": "00000000-0000-4000-8000-000000000010", "text": { "en": "We have ninety seconds." } },
+          { "id": "00000000-0000-4000-8000-0000000000b7", "type": "character", "authors": ["00000000-0000-4000-8000-000000000001"], "character": "00000000-0000-4000-8000-000000000011" },
+          { "id": "00000000-0000-4000-8000-0000000000b8", "type": "dialogue", "authors": ["00000000-0000-4000-8000-000000000001"], "character": "00000000-0000-4000-8000-000000000011", "text": { "en": "You said sixty." } },
+          { "id": "00000000-0000-4000-8000-0000000000b9", "type": "character", "authors": ["00000000-0000-4000-8000-000000000001"], "character": "00000000-0000-4000-8000-000000000010" },
+          { "id": "00000000-0000-4000-8000-0000000000ba", "type": "dialogue", "authors": ["00000000-0000-4000-8000-000000000001"], "character": "00000000-0000-4000-8000-000000000010", "text": { "en": "I lied." } },
+          { "id": "00000000-0000-4000-8000-0000000000bb", "type": "transition", "authors": ["00000000-0000-4000-8000-000000000001"], "text": { "en": "CUT TO:" } }
+        ]
+      },
+      {
+        "id": "00000000-0000-4000-8000-0000000000a2",
+        "authors": ["00000000-0000-4000-8000-000000000001"],
+        "heading": { "no": 2, "context": "EXT.", "setting": "ROOFTOP", "time": "CONTINUOUS" },
+        "cast":    ["00000000-0000-4000-8000-000000000010"],
+        "body": [
+          { "id": "00000000-0000-4000-8000-0000000000c1", "type": "action", "authors": ["00000000-0000-4000-8000-000000000001"], "text": { "en": "Rain. Neon. MARA lands on the gravel, rolls once, and keeps running." } },
+          { "id": "00000000-0000-4000-8000-0000000000c2", "type": "general", "authors": ["00000000-0000-4000-8000-000000000001"], "text": { "en": "— END OF ACT ONE —" } }
+        ]
+      }
+    ]
+  }
+}

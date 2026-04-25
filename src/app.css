@@ -1,0 +1,335 @@
+@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap");
+
+/* Tell Tailwind v4 to scan the sibling screenjson-ui source for class usage.
+   Without this, `@utility paper-page` (and friends) would never be emitted
+   because Tailwind would not see the classes referenced in the viewer's
+   Svelte components. */
+@source "../../screenjson-ui-REFERENCE-ONLY/src/**/*.{svelte,ts,js}";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ----------------------------------------------------------------------------
+   Screenplay design tokens (mirrored from screenjson-ui reference).
+   Inlined rather than @imported because Tailwind v4 doesn't currently
+   process @utility declarations found in nested CSS imports.
+---------------------------------------------------------------------------- */
+@theme {
+  --font-screenplay: "Courier Prime", "Courier New", Courier, ui-monospace, monospace;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+
+  --color-brand-500: #6a1ef0;
+  --color-brand-300: #a97dff;
+  --color-brand-50:  #f5f0ff;
+
+  --color-paper:        #ffffff;
+  --color-paper-fg:     #000000;
+  --color-paper-muted:  #3a3a35;
+  --color-paper-rule:   #d0d0cc;
+
+  --color-workspace:    #cfcdc6;
+  --color-workspace-fg: #1f1f1b;
+
+  --color-ui-bg:     #ffffff;
+  --color-ui-fg:     #0a0a08;
+  --color-ui-muted:  #6b7280;
+  --color-ui-border: #e5e7eb;
+  --color-ui-hover:  #f3f4f6;
+
+  --page-width:  8.5in;
+  --page-height: 11in;
+
+  --margin-page-top:            0.5in;
+  --margin-page-bottom:         0.5in;
+  --margin-action-left:         1.5in;
+  --margin-action-right:        1in;
+  --margin-dialogue-left:       2.5in;
+  --margin-dialogue-right:      2in;
+  --margin-character-left:      3.7in;
+  --margin-parenthetical-left:  3.1in;
+  --margin-parenthetical-right: 2.9in;
+  --margin-transition-left:     5.8in;
+}
+
+@layer base {
+  html.dark {
+    --color-paper:        #1a1a1c;
+    --color-paper-fg:     #ececea;
+    --color-paper-muted:  #9a9a93;
+    --color-paper-rule:   #2a2a2d;
+
+    --color-workspace:    #0a0a0c;
+    --color-workspace-fg: #ececea;
+
+    --color-ui-bg:     #14141a;
+    --color-ui-fg:     #ececea;
+    --color-ui-muted:  #9a9aa6;
+    --color-ui-border: #2a2a2e;
+    --color-ui-hover:  #1f1f25;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-brand-500);
+    color: #ffffff;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Screenplay utilities.
+---------------------------------------------------------------------------- */
+@utility paper-page {
+  width:          var(--page-width);
+  min-height:     var(--page-height);
+  background:     var(--color-paper);
+  color:          var(--color-paper-fg);
+  font-family:    var(--font-screenplay);
+  font-size:      12pt;
+  line-height:    1.15;
+  padding-top:    var(--margin-page-top);
+  padding-bottom: var(--margin-page-bottom);
+  box-shadow:
+    0 6px 18px -4px rgba(0, 0, 0, 0.35),
+    0 2px 4px  -2px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+:where(html.dark) .paper-page {
+  box-shadow:
+    0 6px 22px -4px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(169, 125, 255, 0.08);
+}
+
+@utility sp-element {
+  font-family: var(--font-screenplay);
+  font-size:   var(--screenplay-font-size, 12pt);
+  line-height: var(--screenplay-line-height, 1.15);
+  color:       var(--color-paper-fg);
+  white-space: pre-wrap;
+  word-wrap:   break-word;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+@utility sp-action        { margin-left: var(--margin-action-left);        margin-right: var(--margin-action-right); }
+@utility sp-dialogue      { margin-left: var(--margin-dialogue-left);      margin-right: var(--margin-dialogue-right); }
+@utility sp-character     { margin-left: var(--margin-character-left);     text-transform: uppercase; }
+@utility sp-parenthetical { margin-left: var(--margin-parenthetical-left); margin-right: var(--margin-parenthetical-right); }
+@utility sp-transition    { margin-left: var(--margin-transition-left);    text-transform: uppercase; font-weight: 700; }
+@utility sp-slugline      { margin-left: var(--margin-action-left);        margin-right: var(--margin-action-right); text-transform: uppercase; font-weight: 700; }
+
+@utility sp-space-before-slug       { margin-top: calc(2 / 6 * 1in); }
+@utility sp-space-after-slug        { margin-bottom: calc(1 / 6 * 1in); }
+@utility sp-space-before-char       { margin-top: calc(1 / 6 * 1in); }
+@utility sp-space-before-transition { margin-top: calc(1 / 6 * 1in); margin-bottom: calc(2 / 6 * 1in); }
+@utility sp-space-paragraph         { margin-top: calc(1 / 6 * 1in); }
+
+/* ----------------------------------------------------------------------------
+   Viewer-shell chrome (app-specific).
+---------------------------------------------------------------------------- */
+:root {
+  color-scheme: light dark;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: #f5f5f5;
+  color: #111;
+}
+
+body.theme-dark {
+  background: var(--color-workspace);
+  color: var(--color-workspace-fg);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+.tap {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* ----------------------------------------------------------------------------
+   Responsive modes.
+   - Phone (<=640px): reflow — no paper chrome, proportional indents,
+     readable body font, and the library's CSS `zoom:` auto-fit gets
+     neutralized so text stops shrinking. Reading a script on a phone is
+     always painful; the goal is "readable without zooming".
+   - Tablet (641–1023): library's auto-fit handles this well as-is.
+   - Desktop (>=1024): emphasize the paper-on-workspace metaphor with
+     generous gutters and a heavier shadow.
+---------------------------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  :root {
+    --page-width: 100%;
+    --page-height: auto;
+
+    /* Proportional indents in viewport units. Preserves the visual hierarchy
+       that distinguishes action / dialogue / character / parenthetical /
+       transition without wasting half the screen on 1.5in gutters. */
+    --margin-action-left:         clamp(0.75rem, 4vw, 1.25rem);
+    --margin-action-right:        clamp(0.75rem, 4vw, 1.25rem);
+    --margin-dialogue-left:       14%;
+    --margin-dialogue-right:      6%;
+    --margin-character-left:      28%;
+    --margin-parenthetical-left:  22%;
+    --margin-parenthetical-right: 16%;
+    --margin-transition-left:     58%;
+
+    --margin-page-top:    0;
+    --margin-page-bottom: 0;
+
+    /* Bigger, readable body copy on phones (Courier 12pt at 44% is ~5pt). */
+    --screenplay-font-size: clamp(15px, 4.4vw, 18px);
+    --screenplay-line-height: 1.45;
+  }
+
+  /* ----- Kill the library's "paper on desk" chrome on mobile --------- */
+
+  /* 1. The library's outer page-stack wrapper has inline `style="zoom: X"`
+     plus `py-[48px] px-4 sm:px-6` Tailwind padding. Both create huge
+     empty gutters around the reader that phones can't afford. */
+  .stage [style*="zoom"] {
+    zoom: 1 !important;
+    padding: 0 !important;
+  }
+
+  /* 2. Each Page.svelte renders a header (page number / CONTINUED:) and a
+     footer ((CONTINUED)). These belong to the physical-page metaphor and
+     just clutter a continuous scroll. Hide them entirely in reflow mode. */
+  .paper-page > header,
+  .paper-page > footer {
+    display: none !important;
+  }
+
+  /* 3. The paper article itself: edge-to-edge, no shadow, no gap between
+     "pages" so the script reads as one continuous document. */
+  .paper-page {
+    box-shadow: none !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    border-radius: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* The workspace grey steals real estate on a phone — let the paper fill. */
+  body,
+  body.theme-dark {
+    background: var(--color-paper);
+  }
+
+  /* ----- Screenplay rhythm: generous breathing room between elements -- */
+
+  .sp-space-before-slug {
+    margin-top: 3rem !important;
+  }
+  .sp-space-after-slug {
+    margin-bottom: 1.25rem !important;
+  }
+  .sp-space-before-char {
+    margin-top: 1.6rem !important;
+  }
+  .sp-space-before-transition {
+    margin-top: 1.5rem !important;
+    margin-bottom: 2rem !important;
+  }
+  .sp-space-paragraph {
+    margin-top: 1.2rem !important;
+  }
+
+  /* Scene heading: bottom rule spans the viewport edge-to-edge (via zero
+     margin) while the text itself gets a readable left gutter via padding.
+     Because padding is on the content box, every wrapped line starts at
+     the same indent — no "first line offset" quirk.
+     Override `white-space: pre-wrap` (inherited from .sp-element) because
+     sluglines never contain meaningful embedded whitespace — and pre-wrap
+     preserves leading spaces from the Svelte template, which otherwise
+     offset the first wrapped line relative to the others. */
+  .sp-slugline {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: clamp(0.75rem, 4vw, 1.25rem) !important;
+    padding-right: clamp(0.75rem, 4vw, 1.25rem) !important;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-paper-rule);
+    letter-spacing: 0.02em;
+    white-space: normal;
+  }
+
+  /* First slugline shouldn't push itself down with the scene-break margin. */
+  .paper-page:first-of-type .sp-element:first-child.sp-slugline,
+  .sp-slugline:first-child {
+    margin-top: 0.5rem !important;
+  }
+
+  /* Ease up line-height for actions and dialogue — Courier at 1.15 feels
+     dense on a narrow column. */
+  .sp-action,
+  .sp-dialogue {
+    line-height: 1.55;
+  }
+
+  /* Parenthetical visual: italic and slightly muted so it reads as a
+     stage direction inside the dialogue, not as another dialogue line. */
+  .sp-parenthetical {
+    font-style: italic;
+    color: var(--color-paper-muted);
+    margin-top: 0.25rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  /* Character cue: tighter against its dialogue so it clearly belongs to
+     the speech that follows, not to the paragraph above. */
+  .sp-character {
+    margin-bottom: 0.2rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .paper-page {
+    margin-bottom: 1.75rem;
+    box-shadow:
+      0 12px 36px -10px rgba(0, 0, 0, 0.38),
+      0 2px 6px -2px rgba(0, 0, 0, 0.12);
+  }
+}
+
+@media print {
+  @page { size: letter; margin: 0; }
+  html, body { background: #ffffff; }
+  .no-print { display: none !important; }
+  .paper-page {
+    box-shadow: none;
+    margin: 0;
+    width: 100%;
+    min-height: 100vh;
+    page-break-after:  always;
+    page-break-inside: avoid;
+  }
+  .paper-page:last-child { page-break-after: auto; }
+}

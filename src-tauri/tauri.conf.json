@@ -1,0 +1,88 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "ScreenJSON Viewer",
+  "version": "0.1.0",
+  "identifier": "com.screenjson.viewer",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build",
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "title": "ScreenJSON Viewer",
+        "width": 1000,
+        "height": 720,
+        "minWidth": 360,
+        "minHeight": 480,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "transparent": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "plugins": {
+    "deep-link": {
+      "mobile": [
+        {
+          "host": "open.screenjson.com",
+          "pathPrefix": ["/script"]
+        }
+      ],
+      "desktop": {
+        "schemes": ["screenjson"]
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "Productivity",
+    "shortDescription": "Read ScreenJSON screenplays",
+    "longDescription": "A simple cross-platform viewer for ScreenJSON screenplay files. Open, read, and print screenplays on iPhone, Android, Windows, macOS, and Linux.",
+    "fileAssociations": [
+      {
+        "ext": ["screenjson"],
+        "name": "ScreenJSON Screenplay",
+        "description": "ScreenJSON screenplay file",
+        "role": "Viewer",
+        "mimeType": "application/vnd.screenjson+json"
+      },
+      {
+        "ext": ["json"],
+        "name": "JSON Document",
+        "description": "JSON document (may be a ScreenJSON screenplay)",
+        "role": "Viewer",
+        "mimeType": "application/json"
+      }
+    ],
+    "macOS": {
+      "minimumSystemVersion": "11.0"
+    },
+    "windows": {
+      "wix": {
+        "language": ["en-US"]
+      }
+    },
+    "linux": {
+      "deb": {
+        "depends": []
+      }
+    }
+  }
+}
