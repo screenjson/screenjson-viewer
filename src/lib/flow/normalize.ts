@@ -117,5 +117,5 @@ export function normalizeDocument(doc: ScreenJSONDocument): ScreenJSONDocument {
   return {
     ...(doc as object),
     document: { ...(anyDoc.document as object), scenes: nextScenes }
-  } as ScreenJSONDocument;
+  } as unknown as ScreenJSONDocument;
 }

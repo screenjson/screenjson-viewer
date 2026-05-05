@@ -2,7 +2,7 @@
 
 A simple, cross-platform reader for [ScreenJSON](https://screenjson.com) screenplay files. Think "Acrobat Reader, but for screenplays."
 
-Built as a single Tauri 2 app targeting **iOS, Android, Windows, macOS, and Linux** — one codebase, one webview, five platforms. Reuses the [`screenjson-ui`](https://github.com/screenjson/screenjson-ui) library as an npm dependency for all rendering, pagination, validation, and decryption.
+Built as a single Tauri 2 app targeting **iOS, Android, Windows, macOS, and Linux** — one codebase, one webview, five platforms. Reuses the [`screenjson-ui`](https://github.com/screenjson/screenjson-ui) library for all rendering, pagination, validation, and decryption.
 
 Released as a reference implementation under the MIT license.
 
@@ -22,12 +22,14 @@ Released as a reference implementation under the MIT license.
 
 The viewer is a **thin shell** around the [`screenjson-ui`](https://github.com/screenjson/screenjson-ui) rendering library, which does all the heavy lifting: pagination, element styling, validation, and AES decryption.
 
-**The viewer consumes the library from source**, not from the built bundle. This is enforced by a Vite alias in [vite.config.ts](vite.config.ts) pointing `screenjson-ui` at `../screenjson-ui-REFERENCE-ONLY/src/lib/index.ts`. Two reasons:
+**This repo does not vendor or submodule `screenjson-ui`.** The dependency in [package.json](package.json) points to the public GitHub source tarball for the `screenjson-ui` default branch (`develop`). This repository intentionally disables npm lockfile generation in [.npmrc](.npmrc), and its `postinstall` script refreshes `node_modules/screenjson-ui`, so installs pull the latest upstream UI source instead of freezing one internal checkout or one commit.
+
+**The viewer consumes the library from source**, not from the built bundle. This is enforced by a Vite alias in [vite.config.ts](vite.config.ts) pointing `screenjson-ui` at `node_modules/screenjson-ui/src/lib/index.ts`. Two reasons:
 
 1. **Single Svelte runtime.** The pre-built `dist/screenjson-ui.js` bundles its own Svelte copy. Mounting a bundled Svelte component inside another Svelte app throws `effect_orphan` the moment the inner component touches a rune. Importing source avoids this.
-2. **Instant iteration.** Changes to the library are picked up by Vite HMR with no `build:lib` step. If you edit a component in `screenjson-ui-REFERENCE-ONLY/src/lib/`, the viewer updates immediately.
+2. **Transparent upstream boundary.** The viewer can compile the UI source directly while keeping the library's source and history in the public `screenjson-ui` repo.
 
-**Design tokens and `@utility` rules from the library are inlined** into [src/app.css](src/app.css) rather than imported. Tailwind v4 doesn't currently process `@utility` declarations through nested `@import`s, and it only emits utilities it sees *used* — so the viewer's app.css includes `@source "../../screenjson-ui-REFERENCE-ONLY/src/**/*.{svelte,ts,js}"` to scan the library's components for class references.
+**Design tokens and `@utility` rules from the library are inlined** into [src/app.css](src/app.css) rather than imported. Tailwind v4 doesn't currently process `@utility` declarations through nested `@import`s, and it only emits utilities it sees *used* — so the viewer's app.css includes `@source "../node_modules/screenjson-ui/src/**/*.{svelte,ts,js}"` to scan the library's components for class references.
 
 ### Viewer-only additions (not in the library)
 
@@ -38,9 +40,30 @@ The viewer is a **thin shell** around the [`screenjson-ui`](https://github.com/s
 | Responsive reflow CSS | [src/app.css](src/app.css) | Mobile (≤640px) drops the paper metaphor in favor of edge-to-edge reflow with proportional indents. Library handles tablet/desktop; the viewer adds the phone case. |
 | Cross-platform shell | [src-tauri/](src-tauri/) + [src/lib/platform/](src/lib/platform/) | File associations, deep-links, picker abstraction for iOS/Android/Win/Mac/Linux. |
 
-### Editing the library
+### Updating or editing the library
 
-If a bug or limitation in the library needs a fix in `screenjson-ui` source: just edit the files in `../screenjson-ui-REFERENCE-ONLY/src/lib/`. The viewer picks up the changes via HMR immediately — no `npm link`, no rebuild. Once the change looks good in the viewer, commit and release the library normally (`build:lib` + publish).
+If a bug or limitation belongs in `screenjson-ui`, make that change in a separate clone of [`github.com/screenjson/screenjson-ui`](https://github.com/screenjson/screenjson-ui), commit it there, and push it to the branch this wrapper consumes. Installing this wrapper will then fetch that source:
+
+```bash
+npm install
+```
+
+In an existing checkout with `node_modules` already present, you can refresh only the UI dependency after upstream changes land:
+
+```bash
+npm run ui:update
+```
+
+For temporary local iteration, `npm link` still works with a separate local checkout. Keep that checkout outside this repository so the wrapper remains only a container:
+
+```bash
+# inside a separate screenjson-ui checkout
+npm install
+npm link
+
+# inside screenjson-viewer
+npm link screenjson-ui
+```
 
 ### Library edits made by this project
 
@@ -84,7 +107,7 @@ screenjson-viewer/
 
 ## Prerequisites
 
-- **Node.js 20+** and **pnpm 9+** (or `npm` / `yarn`; replace `pnpm` in commands accordingly).
+- **Node.js 20+** and **npm 10+**.
 - **Rust 1.77+** via [rustup](https://rustup.rs).
 - For **iOS**: Xcode 15+, an Apple Developer account, CocoaPods (`brew install cocoapods`).
 - For **Android**: Android Studio, Android SDK, NDK, JDK 17, and `ANDROID_HOME` / `NDK_HOME` set.
@@ -94,26 +117,17 @@ screenjson-viewer/
 
 ```bash
 cd screenjson-viewer
-pnpm install
+npm install
 ```
 
-The `screenjson-ui` library is pulled from npm. During local development of both projects, use `pnpm link` to point at your local checkout:
-
-```bash
-# inside screenjson-ui-REFERENCE-ONLY/
-pnpm build:lib
-pnpm link --global
-
-# inside screenjson-viewer/
-pnpm link --global screenjson-ui
-```
+The `screenjson-ui` library is pulled from the public GitHub source tarball recorded in [package.json](package.json). No `screenjson-ui` source folder or `package-lock.json` should be committed to this repository.
 
 ## Develop
 
 ### Desktop (macOS, Windows, Linux)
 
 ```bash
-pnpm tauri:dev
+npm run tauri:dev
 ```
 
 The Vite dev server starts on `http://localhost:1420` and the Tauri window opens against it. Hot-reload works for both the frontend and (with a rebuild) the Rust shell.
@@ -123,22 +137,22 @@ The Vite dev server starts on `http://localhost:1420` and the Tauri window opens
 One-time setup:
 
 ```bash
-pnpm tauri:ios:init
+npm run tauri:ios:init
 ```
 
 This generates `src-tauri/gen/apple/`. After generation, edit the Info.plist inside that folder to make sure `CFBundleDocumentTypes` matches the file associations declared in `tauri.conf.json` (Tauri writes most of these automatically, but UTI imports/exports sometimes need a pass). Then:
 
 ```bash
-pnpm tauri:ios:dev              # runs on an attached device or simulator
-pnpm tauri:ios:build            # archive for App Store / TestFlight
+npm run tauri:ios:dev              # runs on an attached device or simulator
+npm run tauri:ios:build            # archive for App Store / TestFlight
 ```
 
 ### Android
 
 ```bash
-pnpm tauri:android:init
-pnpm tauri:android:dev
-pnpm tauri:android:build
+npm run tauri:android:init
+npm run tauri:android:dev
+npm run tauri:android:build
 ```
 
 After `init`, confirm `src-tauri/gen/android/app/src/main/AndroidManifest.xml` has an `<intent-filter>` for `android.intent.action.VIEW` on `application/vnd.screenjson+json` and `application/json` — Tauri generates it from `fileAssociations`, but double-check.
@@ -147,11 +161,11 @@ After `init`, confirm `src-tauri/gen/android/app/src/main/AndroidManifest.xml` h
 
 ```bash
 # Desktop — bundles .app/.dmg (mac), .msi/.exe (win), .deb/.AppImage (linux)
-pnpm tauri:build
+npm run tauri:build
 
 # Mobile
-pnpm tauri:ios:build
-pnpm tauri:android:build
+npm run tauri:ios:build
+npm run tauri:android:build
 ```
 
 Artifacts land in `src-tauri/target/release/bundle/` for desktop and in the native project folders under `src-tauri/gen/` for mobile.
@@ -161,7 +175,7 @@ Artifacts land in `src-tauri/target/release/bundle/` for desktop and in the nati
 Replace the PNG sources referenced in `src-tauri/tauri.conf.json` and regenerate with:
 
 ```bash
-pnpm tauri icon path/to/your-1024x1024.png
+npm run tauri -- icon path/to/your-1024x1024.png
 ```
 
 This produces the full icon set for every platform in one go.

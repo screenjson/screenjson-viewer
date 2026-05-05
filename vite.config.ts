@@ -7,20 +7,52 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const host = process.env.TAURI_DEV_HOST;
 
-// Resolve the screenjson-ui reference repo alongside this one. Using it as
-// SOURCE (not the compiled bundle) avoids the two-Svelte-runtimes problem
-// that causes `effect_orphan` errors when a bundled Svelte component tries
-// to mount inside our Svelte app.
-const screenjsonUiSrc = path.resolve(__dirname, '../screenjson-ui-REFERENCE-ONLY/src/lib');
+// Resolve the screenjson-ui GitHub source dependency from node_modules. Using
+// source (not the compiled bundle) avoids the two-Svelte-runtimes problem that
+// causes `effect_orphan` errors when a bundled Svelte component tries to mount
+// inside our Svelte app.
+const screenjsonUiRoot = path.resolve(__dirname, 'node_modules/screenjson-ui');
+const screenjsonUiSrc = path.join(screenjsonUiRoot, 'src/lib');
+const screenjsonUiCss = path.join(screenjsonUiRoot, 'src/app.css');
+const screenjsonUiCssShim = path.resolve(__dirname, 'src/lib/shims/screenjson-ui-app.css');
+
+function stripQuery(id: string): string {
+  return id.split('?')[0];
+}
+
+function isPath(id: string, target: string): boolean {
+  return path.normalize(stripQuery(id)) === path.normalize(target);
+}
+
+function screenjsonUiCssNoop() {
+  return {
+    name: 'screenjson-ui-css-noop',
+    enforce: 'pre' as const,
+    resolveId(source: string, importer?: string) {
+      if (
+        source === '../app.css' &&
+        importer &&
+        isPath(importer, path.join(screenjsonUiSrc, 'index.ts'))
+      ) {
+        return screenjsonUiCssShim;
+      }
+
+      if (isPath(source, screenjsonUiCss)) {
+        return screenjsonUiCssShim;
+      }
+
+      return null;
+    }
+  };
+}
 
 export default defineConfig({
-  plugins: [svelte(), tailwindcss()],
+  plugins: [screenjsonUiCssNoop(), svelte(), tailwindcss()],
 
   resolve: {
     alias: [
       // Consume screenjson-ui from source, not the built bundle.
       { find: /^screenjson-ui$/, replacement: path.join(screenjsonUiSrc, 'index.ts') },
-      { find: /^screenjson-ui\/style\.css$/, replacement: path.resolve(__dirname, 'src/app-viewer.css') },
       // Shim SvelteKit's $app/environment for the three source files that reference it.
       { find: /^\$app\/environment$/, replacement: path.resolve(__dirname, 'src/lib/shims/env.ts') }
     ]
@@ -39,8 +71,7 @@ export default defineConfig({
     host: host || false,
     hmr: host ? { protocol: 'ws', host, port: 1421 } : undefined,
     fs: {
-      // Allow Vite to import files from the sibling reference repo.
-      allow: [__dirname, screenjsonUiSrc, path.resolve(__dirname, '..')]
+      allow: [__dirname, screenjsonUiRoot]
     },
     watch: {
       ignored: ['**/src-tauri/**']

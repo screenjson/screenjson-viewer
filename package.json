@@ -9,6 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
+    "postinstall": "node scripts/refresh-screenjson-ui.mjs",
+    "ui:update": "node scripts/refresh-screenjson-ui.mjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
@@ -20,18 +22,20 @@
     "tauri:ios:build": "tauri ios build"
   },
   "dependencies": {
-    "screenjson-ui": "file:../screenjson-ui-REFERENCE-ONLY",
     "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-deep-link": "^2.0.0",
     "@tauri-apps/plugin-dialog": "^2.0.0",
     "@tauri-apps/plugin-fs": "^2.0.0",
-    "@tauri-apps/plugin-deep-link": "^2.0.0",
+    "@tauri-apps/plugin-opener": "^2.0.0",
     "@tauri-apps/plugin-os": "^2.0.0",
-    "@tauri-apps/plugin-opener": "^2.0.0"
+    "screenjson-ui": "https://github.com/screenjson/screenjson-ui/archive/refs/heads/develop.tar.gz"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@tailwindcss/vite": "^4.0.0",
     "@tauri-apps/cli": "^2.0.0",
+    "@types/crypto-js": "^4.2.2",
+    "@types/node": "^22.19.17",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
     "tailwindcss": "^4.0.0",

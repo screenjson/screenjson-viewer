@@ -4,6 +4,9 @@ dist-ssr
 .DS_Store
 *.log
 
+# Local scratch checkout only; the viewer consumes screenjson-ui from GitHub.
+screenjson-ui-REFERENCE-ONLY/
+
 # Tauri
 src-tauri/target
 src-tauri/gen/schemas

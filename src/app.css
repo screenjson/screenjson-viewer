@@ -1,11 +1,11 @@
-@import "tailwindcss";
 @import url("https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap");
+@import "tailwindcss";
 
-/* Tell Tailwind v4 to scan the sibling screenjson-ui source for class usage.
+/* Tell Tailwind v4 to scan the screenjson-ui source dependency for class usage.
    Without this, `@utility paper-page` (and friends) would never be emitted
    because Tailwind would not see the classes referenced in the viewer's
    Svelte components. */
-@source "../../screenjson-ui-REFERENCE-ONLY/src/**/*.{svelte,ts,js}";
+@source "../node_modules/screenjson-ui/src/**/*.{svelte,ts,js}";
 
 @custom-variant dark (&:where(.dark, .dark *));
 

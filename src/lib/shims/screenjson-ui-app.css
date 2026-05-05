@@ -1,0 +1,3 @@
+/* screenjson-ui imports its app CSS from the source entry. The viewer mirrors
+   the needed design tokens and utilities in src/app.css, so this side-effect
+   import is intentionally replaced with a no-op. */
