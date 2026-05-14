@@ -78,5 +78,12 @@ export default defineConfig({
     }
   },
 
-  envPrefix: ['VITE_', 'TAURI_ENV_*']
+  envPrefix: ['VITE_', 'TAURI_ENV_*'],
+
+  // screenjson-ui is consumed from source (Svelte 5 runes, .svelte.ts). Letting Vite
+  // prebundle it runs esbuild over those files, which breaks parsing and skips our
+  // $app/* aliases — see vite-plugin-svelte "optimizeDeps.exclude" for libraries.
+  optimizeDeps: {
+    exclude: ['screenjson-ui']
+  }
 });

@@ -22,7 +22,7 @@ Released as a reference implementation under the MIT license.
 
 The viewer is a **thin shell** around the [`screenjson-ui`](https://github.com/screenjson/screenjson-ui) rendering library, which does all the heavy lifting: pagination, element styling, validation, and AES decryption.
 
-**This repo does not vendor or submodule `screenjson-ui`.** The dependency in [package.json](package.json) points to the public GitHub source tarball for the `screenjson-ui` default branch (`develop`). This repository intentionally disables npm lockfile generation in [.npmrc](.npmrc), and its `postinstall` script refreshes `node_modules/screenjson-ui`, so installs pull the latest upstream UI source instead of freezing one internal checkout or one commit.
+**This repo does not vendor or submodule `screenjson-ui`.** The dependency in [package.json](package.json) points to the public GitHub source tarball for the `screenjson-ui` default branch (`develop`). [.npmrc](.npmrc) disables lockfile generation and sets `install-strategy=nested` so npm can resolve that tarball without hitting arborist dedupe bugs; the `postinstall` script refreshes `node_modules/screenjson-ui`, so installs pull the latest upstream UI source instead of freezing one internal checkout or one commit.
 
 **The viewer consumes the library from source**, not from the built bundle. This is enforced by a Vite alias in [vite.config.ts](vite.config.ts) pointing `screenjson-ui` at `node_modules/screenjson-ui/src/lib/index.ts`. Two reasons:
 
@@ -61,9 +61,11 @@ For temporary local iteration, `npm link` still works with a separate local chec
 npm install
 npm link
 
-# inside screenjson-viewer
+# inside screenjson-viewer (after npm link was run in the library repo)
 npm link screenjson-ui
 ```
+
+`npm link screenjson-ui` **without** running `npm link` first in a local `screenjson-ui` clone will try the public npm registry and fail with `404` — that package is not published to npm; the default install path is the GitHub tarball in [package.json](package.json).
 
 ### Library edits made by this project
 
@@ -107,30 +109,50 @@ screenjson-viewer/
 
 ## Prerequisites
 
-- **Node.js 20+** and **npm 10+**.
-- **Rust 1.77+** via [rustup](https://rustup.rs).
-- For **iOS**: Xcode 15+, an Apple Developer account, CocoaPods (`brew install cocoapods`).
-- For **Android**: Android Studio, Android SDK, NDK, JDK 17, and `ANDROID_HOME` / `NDK_HOME` set.
-- Platform toolchain basics are listed in the [Tauri prerequisites guide](https://tauri.app/start/prerequisites/).
+Do **system + Rust setup first**; `npm install` alone is not enough to run the desktop app.
+
+1. **Tauri system dependencies** — Follow the [Tauri prerequisites](https://tauri.app/start/prerequisites/) for your OS *before* `npm run tauri:dev` or `npm run tauri:build`. That page covers the native libraries and toolchains Tauri expects (for example WebKitGTK and build essentials on Linux, Xcode Command Line Tools on macOS, WebView2 and MSVC build tools on Windows).
+2. **Rust 1.77+** via [rustup](https://rustup.rs) so `cargo` and `rustc` are on your `PATH`. The first Tauri command will download Rust crate dependencies into `src-tauri/target/`; no separate manual `cargo fetch` is required if the toolchain is installed correctly.
+3. **Node.js 20+** and **npm 10+**. Use a single toolchain for both commands (for example the `node` and `npm` from the same [nvm](https://github.com/nvm-sh/nvm) or [fnm](https://github.com/Schniz/fnm) install). Some environments put another `node` earlier on `PATH` than the one that owns `npm`, which can produce confusing install errors.
+4. For **iOS**: Xcode 15+, an Apple Developer account, CocoaPods (`brew install cocoapods`).
+5. For **Android**: Android Studio, Android SDK, NDK, JDK 17, and `ANDROID_HOME` / `NDK_HOME` set.
+
+`npm install` adds the JavaScript side (including `@tauri-apps/cli`); it does **not** replace the OS-specific libraries from step 1 or the Rust toolchain from step 2.
 
 ## Install
 
+From this app’s directory (named `screenjson-viewer` whether you cloned [the viewer repo](https://github.com/screenjson/screenjson-viewer) by itself or it lives inside a larger checkout):
+
 ```bash
-cd screenjson-viewer
+cd screenjson-viewer   # skip if your shell is already here
 npm install
 ```
 
-The `screenjson-ui` library is pulled from the public GitHub source tarball recorded in [package.json](package.json). No `screenjson-ui` source folder or `package-lock.json` should be committed to this repository.
+Requirements:
+
+- **Network:** `npm install` must reach `github.com` to download the `screenjson-ui` source tarball declared in [package.json](package.json).
+- **Layout:** [.npmrc](.npmrc) sets `install-strategy=nested` so npm does not hit a known arborist bug when deduplicating dependencies installed from that tarball (`Cannot read properties of null (reading 'matches')` and similar).
+
+No `screenjson-ui` source folder or `package-lock.json` should be committed to this repository (`package-lock=false` is intentional).
+
+If install still fails after a partial or interrupted run, clear the tree and retry:
+
+```bash
+rm -rf node_modules
+npm install
+```
 
 ## Develop
 
 ### Desktop (macOS, Windows, Linux)
 
+Requires the [Tauri prerequisites](#prerequisites) (system libraries + Rust) to be in place first. Then:
+
 ```bash
 npm run tauri:dev
 ```
 
-The Vite dev server starts on `http://localhost:1420` and the Tauri window opens against it. Hot-reload works for both the frontend and (with a rebuild) the Rust shell.
+The Vite dev server starts on `http://localhost:1420` and the Tauri window opens against it. Hot-reload works for both the frontend and (with a rebuild) the Rust shell. [src-tauri/tauri.conf.json](src-tauri/tauri.conf.json) runs `npm run dev` as the frontend `beforeDevCommand` (same package manager as this repo).
 
 ### iOS
 
