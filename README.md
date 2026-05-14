@@ -135,12 +135,15 @@ Requirements:
 
 No `screenjson-ui` source folder or `package-lock.json` should be committed to this repository (`package-lock=false` is intentional).
 
-If install still fails after a partial or interrupted run, clear the tree and retry:
+If install still fails after a partial or interrupted run, or the dev webview shows stale module errors, reset front-end and Rust artifacts, then reinstall:
 
 ```bash
-rm -rf node_modules
+rm -rf node_modules dist .vite
+(cd src-tauri && cargo clean)
 npm install
 ```
+
+Then `npm run tauri:dev` again.
 
 ## Develop
 
