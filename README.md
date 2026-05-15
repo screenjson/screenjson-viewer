@@ -8,7 +8,7 @@ Released as a reference implementation under the MIT license.
 
 ## What it does
 
-- Opens `.screenjson` and `.json` files either by picker, drag-and-drop, from a URL, or by tapping/double-clicking a file the OS routes to the app.
+- Opens local `.json` ScreenJSON files by picker, drag-and-drop, or by tapping/double-clicking a file the OS routes to the app.
 - Rejects files that aren't ScreenJSON with a friendly, non-technical message (distinguishing *not valid JSON* from *valid JSON but not a screenplay*).
 - Prompts for a password on encrypted scripts and decrypts in-memory.
 - Traditional screenplay title page (title, author, logline, based-on credits) rendered as a proper cover before the script.
@@ -24,10 +24,11 @@ The viewer is a **thin shell** around the [`screenjson-ui`](https://github.com/s
 
 **This repo does not vendor or submodule `screenjson-ui`.** The dependency in [package.json](package.json) points to the public GitHub source tarball for the `screenjson-ui` default branch (`develop`). [.npmrc](.npmrc) disables lockfile generation and sets `install-strategy=nested` so npm can resolve that tarball without hitting arborist dedupe bugs; the `postinstall` script refreshes `node_modules/screenjson-ui`, so installs pull the latest upstream UI source instead of freezing one internal checkout or one commit.
 
-**The viewer consumes the library from source**, not from the built bundle. This is enforced by a Vite alias in [vite.config.ts](vite.config.ts) pointing `screenjson-ui` at `node_modules/screenjson-ui/src/lib/index.ts`. Two reasons:
+**The viewer consumes the library from source**, not from the built bundle. This is enforced by a Vite alias in [vite.config.ts](vite.config.ts) pointing `screenjson-ui` at a viewer-local facade, [src/lib/shims/screenjson-ui.ts](src/lib/shims/screenjson-ui.ts), which re-exports only the named source modules the native viewer uses. Three reasons:
 
 1. **Single Svelte runtime.** The pre-built `dist/screenjson-ui.js` bundles its own Svelte copy. Mounting a bundled Svelte component inside another Svelte app throws `effect_orphan` the moment the inner component touches a rune. Importing source avoids this.
-2. **Transparent upstream boundary.** The viewer can compile the UI source directly while keeping the library's source and history in the public `screenjson-ui` repo.
+2. **WebKit-compatible module shape.** Tauri's WebKit runtime can reject the upstream public barrel's default re-export during native ESM resolution. The facade avoids loading that barrel in the app.
+3. **Transparent upstream boundary.** The viewer can compile the UI source directly while keeping the library's source and history in the public `screenjson-ui` repo.
 
 **Design tokens and `@utility` rules from the library are inlined** into [src/app.css](src/app.css) rather than imported. Tailwind v4 doesn't currently process `@utility` declarations through nested `@import`s, and it only emits utilities it sees *used* — so the viewer's app.css includes `@source "../node_modules/screenjson-ui/src/**/*.{svelte,ts,js}"` to scan the library's components for class references.
 
@@ -38,7 +39,7 @@ The viewer is a **thin shell** around the [`screenjson-ui`](https://github.com/s
 | Dialogue normalizer | [src/lib/flow/normalize.ts](src/lib/flow/normalize.ts) | Repairs a common data-quality issue — consecutive `dialogue` elements from one speaker-turn get merged. Fixes PDF-converted scripts where each visual line was stored as its own element. |
 | ~~Title page~~ | Now in the library — see "Library edits" below | — |
 | Responsive reflow CSS | [src/app.css](src/app.css) | Mobile (≤640px) drops the paper metaphor in favor of edge-to-edge reflow with proportional indents. Library handles tablet/desktop; the viewer adds the phone case. |
-| Cross-platform shell | [src-tauri/](src-tauri/) + [src/lib/platform/](src/lib/platform/) | File associations, deep-links, picker abstraction for iOS/Android/Win/Mac/Linux. |
+| Cross-platform shell | [src-tauri/](src-tauri/) + [src/lib/platform/](src/lib/platform/) | File associations and picker abstraction for iOS/Android/Win/Mac/Linux. |
 
 ### Updating or editing the library
 
@@ -99,7 +100,7 @@ screenjson-viewer/
 │       └── components/     # Home, Reader, PageSlider, TopBar, …
 ├── src-tauri/              # Rust shell (one project, five targets)
 │   ├── src/lib.rs          # Tauri entry; plugin wiring
-│   ├── tauri.conf.json     # bundle + file associations + deep links
+│   ├── tauri.conf.json     # bundle + file associations
 │   ├── capabilities/       # plugin permissions
 │   └── icons/
 ├── index.html
@@ -180,7 +181,7 @@ npm run tauri:android:dev
 npm run tauri:android:build
 ```
 
-After `init`, confirm `src-tauri/gen/android/app/src/main/AndroidManifest.xml` has an `<intent-filter>` for `android.intent.action.VIEW` on `application/vnd.screenjson+json` and `application/json` — Tauri generates it from `fileAssociations`, but double-check.
+After `init`, confirm `src-tauri/gen/android/app/src/main/AndroidManifest.xml` has an `<intent-filter>` for `android.intent.action.VIEW` on `application/vnd.screenjson+json` with the `.json` extension — Tauri generates it from `fileAssociations`, but double-check.
 
 ## Build for release
 
@@ -197,10 +198,10 @@ Artifacts land in `src-tauri/target/release/bundle/` for desktop and in the nati
 
 ## App icons
 
-Replace the PNG sources referenced in `src-tauri/tauri.conf.json` and regenerate with:
+Edit `src-tauri/icons/app-icon.svg` or replace it with a 1024x1024 source image, then regenerate with:
 
 ```bash
-npm run tauri -- icon path/to/your-1024x1024.png
+npm run tauri -- icon src-tauri/icons/app-icon.svg
 ```
 
 This produces the full icon set for every platform in one go.
@@ -214,17 +215,13 @@ This produces the full icon set for every platform in one go.
 | Android  | Auto-generated into `gen/android/.../AndroidManifest.xml` |
 | macOS UTI exports | `bundle.fileAssociations` (role: Viewer)       |
 
-The file extension is `.screenjson` with MIME type `application/vnd.screenjson+json`. `.json` is registered as a secondary handler — the app gracefully rejects non-ScreenJSON JSON files with a clear message.
-
-## Deep-link URL scheme
-
-`screenjson://…` is registered on desktop, and `https://open.screenjson.com/script/…` (HTTP deep link) on mobile. See the `plugins.deep-link` section in `tauri.conf.json`.
+The registered file extension is `.json` with MIME type `application/vnd.screenjson+json`. The app gracefully rejects non-ScreenJSON JSON files with a clear message.
 
 ## Non-goals
 
 - **No editing.** Full stop.
 - **No export.** Printing is available via the system print dialog.
-- **No cloud sync, no accounts.** Local files and URLs only.
+- **No cloud sync, no accounts, no remote URL opens.** Local files only.
 
 ## License
 

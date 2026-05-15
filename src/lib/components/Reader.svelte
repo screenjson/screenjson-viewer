@@ -1,6 +1,13 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
-  import { ScreenJSONViewer, TitlePage, type ScreenJSONDocument } from 'screenjson-ui';
+  import {
+    collectDocumentLanguages,
+    getLanguageOptions,
+    paginate,
+    ScreenJSONViewer,
+    TitlePage,
+    type ScreenJSONDocument
+  } from 'screenjson-ui';
   import { app } from '../state.svelte';
   import TopBar from './TopBar.svelte';
   import PageSlider from './PageSlider.svelte';
@@ -16,6 +23,22 @@
   } = $props();
 
   let stage: HTMLDivElement | null = $state(null);
+  const availableLangs = $derived(collectDocumentLanguages(doc));
+  const languageOptions = $derived(getLanguageOptions(availableLangs));
+  const activeLang = $derived(
+    availableLangs.includes(app.lang) ? app.lang : (availableLangs[0] ?? doc.lang ?? 'en')
+  );
+  const pageTotal = $derived.by(() => {
+    try {
+      return Math.max(1, paginate(doc, activeLang).totalPages || 1);
+    } catch {
+      return Math.max(1, totalPages || 1);
+    }
+  });
+
+  $effect(() => {
+    if (activeLang !== app.lang) app.setLang(activeLang);
+  });
 
   /** Desktops get persistent chrome; phones auto-hide on tap. */
   function isCoarsePointer(): boolean {
@@ -156,6 +179,10 @@
     scroller.scrollBy({ top: targetTop - containerTop - 16, behavior: 'smooth' });
   }
 
+  function preventContentTransfer(e: Event) {
+    e.preventDefault();
+  }
+
   onMount(() => {
     let intersectionObs: IntersectionObserver | null = null;
     let mutationObs: MutationObserver | null = null;
@@ -210,7 +237,12 @@
 
 <section class="reader" class:chrome={app.chromeVisible}>
   {#if app.chromeVisible}
-    <TopBar {source} />
+    <TopBar
+      {source}
+      lang={activeLang}
+      {languageOptions}
+      onLangChange={(lang) => app.setLang(lang)}
+    />
   {/if}
 
   <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -223,13 +255,19 @@
     onpointermove={onStagePointerMove}
     onpointerup={onStagePointerUp}
     onpointercancel={onStagePointerUp}
+    oncopy={preventContentTransfer}
+    oncut={preventContentTransfer}
+    onpaste={preventContentTransfer}
+    oncontextmenu={preventContentTransfer}
+    ondragstart={preventContentTransfer}
   >
-    <TitlePage document={doc} />
+    <TitlePage document={doc} lang={activeLang} />
 
     <ScreenJSONViewer
       document={doc}
       theme={app.theme}
       zoom={app.zoom}
+      lang={activeLang}
       showMenu={false}
       paginated={true}
     />
@@ -239,7 +277,7 @@
     <footer>
       <PageSlider
         current={app.currentPage}
-        total={totalPages}
+        total={pageTotal}
         onSeek={seekToPage}
       />
     </footer>
@@ -260,6 +298,10 @@
     overflow-x: hidden;
     overflow-y: auto;
     position: relative;
+    background: var(--color-workspace);
+    color: var(--color-workspace-fg);
+    user-select: none;
+    -webkit-user-select: none;
     /* Let one-finger drags pan vertically, but intercept pinch so our
        gesture handler can drive `app.zoom` instead of the browser's
        built-in page zoom. */
@@ -271,10 +313,7 @@
   .stage :global(.screenplay-viewer) {
     min-height: auto !important;
     overflow: visible !important;
-  }
-  /* Render the viewer edge-to-edge; it provides its own page paper. */
-  .stage :global(> *) {
-    height: 100%;
+    background: transparent !important;
   }
   footer {
     position: absolute;

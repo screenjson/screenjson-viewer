@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { app } from './lib/state.svelte';
   import { subscribeIncomingOpens } from './lib/platform';
-  import { openFromPath, openFromUrl, openFromContents } from './lib/flow/openAndRoute';
+  import { openFromPath, openFromContents } from './lib/flow/openAndRoute';
   import Home from './lib/components/Home.svelte';
   import Reader from './lib/components/Reader.svelte';
   import PasswordPrompt from './lib/components/PasswordPrompt.svelte';
@@ -17,11 +17,9 @@
 
     (async () => {
       unlisten = await subscribeIncomingOpens((target) => {
-        if (target.startsWith('http://') || target.startsWith('https://')) {
-          openFromUrl(target);
-        } else if (target.startsWith('file://')) {
+        if (target.startsWith('file://')) {
           openFromPath(decodeURIComponent(target.replace(/^file:\/\//, '')));
-        } else {
+        } else if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(target)) {
           openFromPath(target);
         }
       });
@@ -103,7 +101,7 @@
       <div class="drop-card">
         <div class="drop-icon">⤵</div>
         <p class="drop-title">Drop the script to open it</p>
-        <p class="drop-hint">.screenjson or .json</p>
+        <p class="drop-hint">.json</p>
       </div>
     </div>
   {/if}

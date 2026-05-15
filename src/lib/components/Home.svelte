@@ -1,11 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { openUrl } from '@tauri-apps/plugin-opener';
   import { app } from '../state.svelte';
-  import { openFromPicker, openFromUrl, openFromPath } from '../flow/openAndRoute';
+  import { openFromPicker, openFromPath } from '../flow/openAndRoute';
   import { loadRecents, removeRecent, type RecentEntry } from '../recent';
 
-  let urlInputOpen = $state(false);
-  let urlValue = $state('');
   let recents = $state<RecentEntry[]>([]);
 
   onMount(() => {
@@ -16,18 +15,8 @@
     app.setTheme(app.theme === 'dark' ? 'light' : 'dark');
   }
 
-  function submitUrl(e: SubmitEvent) {
-    e.preventDefault();
-    const trimmed = urlValue.trim();
-    if (!trimmed) return;
-    const prefixed = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-    openFromUrl(prefixed);
-  }
-
   function openRecent(r: RecentEntry) {
-    if (r.kind === 'url' && r.target) {
-      openFromUrl(r.target);
-    } else if (r.kind === 'path' && r.target) {
+    if (r.kind === 'path' && r.target) {
       openFromPath(r.target);
     } else {
       // "Name only" — we don't have the bytes. Prompt picker.
@@ -39,6 +28,15 @@
     e.stopPropagation();
     removeRecent(r.target, r.label);
     recents = loadRecents();
+  }
+
+  function openExternal(e: MouseEvent, url: string) {
+    e.preventDefault();
+    if ('__TAURI_INTERNALS__' in window) {
+      openUrl(url);
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
   }
 
   function timeAgo(ts: number): string {
@@ -56,49 +54,62 @@
 <section class="home" class:dark={app.theme === 'dark'}>
   <div class="top">
     <button class="tap icon" aria-label="Toggle theme" onclick={toggleTheme}>
-      {app.theme === 'dark' ? '☀' : '☾'}
+      {#if app.theme === 'dark'}
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2.5M12 19.5V22M4.93 4.93l1.77 1.77M17.3 17.3l1.77 1.77M2 12h2.5M19.5 12H22M4.93 19.07l1.77-1.77M17.3 6.7l1.77-1.77" />
+        </svg>
+      {:else}
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20.3 14.7A7.8 7.8 0 0 1 9.3 3.7a8.2 8.2 0 1 0 11 11Z" />
+        </svg>
+      {/if}
     </button>
   </div>
 
   <div class="center">
-    <div class="brand">
-      <div class="logo">⏵</div>
-      <h1>ScreenJSON Viewer</h1>
-      <p class="tagline">Open a script. Read it anywhere.</p>
-    </div>
+    <div class="hero">
+      <div class="brand">
+        <img class="logo" src="/favicon.svg" alt="" aria-hidden="true" />
+        <h1>screenjson viewer</h1>
+        <p class="tagline">
+          Preview saved ScreenJSON files to check an export. To create one, use:
+        </p>
+        <div class="tool-links" aria-label="ScreenJSON tools">
+          <a
+            class="tool-link"
+            href="https://screenjson.com/tools/screenjson-export/"
+            onclick={(e) => openExternal(e, 'https://screenjson.com/tools/screenjson-export/')}
+          >
+            <span>screenjson-export</span>
+            <small>convert Final Draft, Fountain, FadeIn</small>
+          </a>
+          <a
+            class="tool-link"
+            href="https://screenjson.com/tools/screenjson-cli/"
+            onclick={(e) => openExternal(e, 'https://screenjson.com/tools/screenjson-cli/')}
+          >
+            <span>screenjson-cli</span>
+            <small>Convert, store, validate, encrypt, API</small>
+          </a>
 
-    <div class="actions">
-      <button class="primary" onclick={() => openFromPicker()}>
-        Open a script
-      </button>
+          <a
+            class="tool-link"
+            href="https://screenjson.com/tools/greenlight/"
+            onclick={(e) => openExternal(e, 'https://screenjson.com/tools/greenlight/')}
+          >
+            <span>Greenlight</span>
+            <small>Professional queue-managed batch converter</small>
+          </a>
+        </div>
+      </div>
 
-      {#if !urlInputOpen}
-        <button class="secondary" onclick={() => (urlInputOpen = true)}>
-          Open from a web address
+      <div class="actions">
+        <button class="primary" onclick={() => openFromPicker()}>
+          open a .json screenplay file
         </button>
-      {:else}
-        <form class="url-form" onsubmit={submitUrl}>
-          <input
-            type="url"
-            inputmode="url"
-            placeholder="https://example.com/script.json"
-            bind:value={urlValue}
-            autocomplete="off"
-            autocapitalize="off"
-          />
-          <div class="url-row">
-            <button type="button" class="ghost" onclick={() => (urlInputOpen = false)}>
-              Cancel
-            </button>
-            <button type="submit" class="primary small">Open</button>
-          </div>
-        </form>
-      {/if}
+      </div>
     </div>
-
-    <p class="hint">
-      Drag a <code>.screenjson</code> or <code>.json</code> file anywhere onto this window.
-    </p>
 
     {#if recents.length > 0}
       <div class="recents">
@@ -110,7 +121,7 @@
             <li class="recent-row">
               <button class="recent-main" onclick={() => openRecent(r)}>
                 <span class="recent-icon" aria-hidden="true">
-                  {r.kind === 'url' ? '🔗' : '📄'}
+                  📄
                 </span>
                 <span class="recent-body">
                   <span class="recent-label">{r.label}</span>
@@ -151,62 +162,148 @@
   .top {
     display: flex;
     justify-content: flex-end;
-    padding: 8px 12px;
+    padding: 14px 18px;
   }
   .icon {
-    border: 0;
-    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(17, 17, 17, 0.18);
+    background: rgba(255, 255, 255, 0.7);
     color: inherit;
-    font-size: 20px;
     border-radius: 999px;
-    opacity: 0.7;
+    opacity: 0.95;
     cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+  .icon svg {
+    width: 23px;
+    height: 23px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
   .icon:hover {
     opacity: 1;
+    background: #fff;
+    border-color: rgba(17, 17, 17, 0.3);
+  }
+  .dark .icon {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.22);
+    color: #fff;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.28);
+  }
+  .dark .icon:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.36);
   }
   .center {
     flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 24px;
+    justify-content: center;
+    padding: 24px max(24px, 10vw) 28px;
     text-align: center;
-    gap: 20px;
+    gap: 28px;
+    overflow: hidden;
+  }
+  .hero {
+    width: min(80vw, 920px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    flex: 1 1 auto;
+    min-height: min-content;
   }
   .brand {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    margin-top: 32px;
+    gap: clamp(22px, 3.2vh, 34px);
+    width: 100%;
   }
   .logo {
-    font-size: 44px;
-    line-height: 1;
-    opacity: 0.8;
+    width: clamp(58px, 7vw, 84px);
+    height: clamp(58px, 7vw, 84px);
+    display: block;
+    border-radius: 18px;
+    filter: invert(1);
+  }
+  .dark .logo {
+    filter: none;
   }
   h1 {
     margin: 0;
-    font-size: 22px;
-    font-weight: 600;
+    font-size: clamp(34px, 5vw, 56px);
+    font-weight: 200;
+    line-height: 1.06;
   }
   .tagline {
     margin: 0;
-    opacity: 0.6;
-    font-size: 15px;
+    opacity: 0.62;
+    width: min(80vw, 760px);
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.45;
+  }
+  .tool-links {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    width: min(80vw, 860px);
+    margin-top: 2px;
+  }
+  .tool-link {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid rgba(17, 17, 17, 0.14);
+    border-radius: 10px;
+    color: inherit;
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.45);
+    text-align: left;
+  }
+  .tool-link:hover {
+    border-color: rgba(17, 17, 17, 0.3);
+    background: rgba(255, 255, 255, 0.75);
+  }
+  .tool-link span {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .tool-link small {
+    font-size: 12px;
+    line-height: 1.35;
+    opacity: 0.62;
+  }
+  .dark .tool-link {
+    border-color: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.07);
+  }
+  .dark .tool-link:hover {
+    border-color: rgba(255, 255, 255, 0.32);
+    background: rgba(255, 255, 255, 0.12);
   }
   .actions {
     display: flex;
     flex-direction: column;
     gap: 12px;
     width: 100%;
-    max-width: 340px;
+    max-width: 360px;
+    margin-top: clamp(34px, 7vh, 92px);
   }
-  button.primary,
-  button.secondary,
-  button.ghost {
-    padding: 14px 16px;
+  button.primary {
+    padding: 16px 18px;
     border-radius: 12px;
     border: 1px solid transparent;
     font-size: 16px;
@@ -222,55 +319,13 @@
     background: #fff;
     color: #111;
   }
-  button.primary.small {
-    padding: 10px 14px;
-    font-size: 15px;
-  }
-  button.secondary {
-    background: transparent;
-    border-color: currentColor;
-    opacity: 0.7;
-  }
-  button.secondary:hover {
-    opacity: 1;
-  }
-  button.ghost {
-    background: transparent;
-    border: 0;
-    opacity: 0.7;
-  }
-  .url-form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .url-form input {
-    padding: 14px 16px;
-    border-radius: 12px;
-    border: 1px solid rgba(127, 127, 127, 0.4);
-    font-size: 16px;
-    background: transparent;
-    color: inherit;
-  }
-  .url-row {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-  }
-  .hint {
-    font-size: 13px;
-    opacity: 0.55;
-    max-width: 360px;
-    margin: 0;
-  }
-  code {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 12.5px;
-  }
   .recents {
     width: 100%;
     max-width: 420px;
-    margin-top: 12px;
+    flex: 0 1 32vh;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 4px;
     text-align: left;
   }
   .recents-head {
@@ -357,5 +412,48 @@
   .forget:hover {
     opacity: 1 !important;
     background: rgba(127, 127, 127, 0.15);
+  }
+
+  @media (max-width: 640px) {
+    .center {
+      padding: 18px 20px 24px;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .hero {
+      width: 88vw;
+      gap: 24px;
+    }
+
+    .brand {
+      width: 100%;
+      gap: clamp(18px, 3vh, 26px);
+    }
+
+    .logo {
+      width: 60px;
+      height: 60px;
+    }
+
+    .tagline {
+      width: 88vw;
+      font-size: 15.5px;
+    }
+
+    .tool-links {
+      grid-template-columns: 1fr;
+      width: 88vw;
+      gap: 8px;
+    }
+
+    .tool-link {
+      padding: 11px 13px;
+    }
+
+    .recents {
+      flex-basis: 28vh;
+      max-width: 88vw;
+    }
   }
 </style>

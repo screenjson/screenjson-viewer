@@ -1,4 +1,4 @@
-import type { ScreenJSONDocument } from 'screenjson-ui';
+import type { Lang, ScreenJSONDocument } from 'screenjson-ui';
 
 export type Theme = 'light' | 'dark';
 
@@ -37,6 +37,7 @@ class AppState {
   screen = $state<Screen>({ kind: 'home' });
   theme = $state<Theme>(detectInitialTheme());
   zoom = $state<number>(detectInitialZoom());
+  lang = $state<Lang>('en');
   chromeVisible = $state<boolean>(true);
   currentPage = $state<number>(1);
 
@@ -57,9 +58,15 @@ class AppState {
     } catch {}
   }
 
+  setLang(v: Lang) {
+    this.lang = v;
+    this.currentPage = 1;
+  }
+
   toHome() {
     this.screen = { kind: 'home' };
     this.currentPage = 1;
+    this.lang = 'en';
     this.chromeVisible = true;
   }
 }

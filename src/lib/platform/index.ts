@@ -4,7 +4,7 @@ import { onOpenUrl, getCurrent } from '@tauri-apps/plugin-deep-link';
 import { type as osType } from '@tauri-apps/plugin-os';
 
 export interface LoadedFile {
-  source: string; // human-readable label: file name or URL
+  source: string; // human-readable file name
   contents: string;
   /** Absolute path when available (desktop Tauri). Null on mobile/web. */
   path?: string | null;
@@ -49,7 +49,7 @@ export async function pickAndReadFile(): Promise<LoadedFile | null> {
     multiple: false,
     directory: false,
     filters: [
-      { name: 'ScreenJSON', extensions: ['screenjson', 'json'] },
+      { name: 'ScreenJSON JSON', extensions: ['json'] },
       { name: 'All files', extensions: ['*'] }
     ]
   });
@@ -66,25 +66,12 @@ export async function pickAndReadFile(): Promise<LoadedFile | null> {
 export async function readKnownFile(path: string): Promise<LoadedFile> {
   const contents = await readTextFile(path);
   const name = path.split(/[\\/]/).pop() || path;
-  return { source: name, contents };
+  return { source: name, contents, path };
 }
 
 /**
- * Fetches a document from a URL. Uses the webview fetch so CORS applies; for cross-origin
- * needs on mobile, consider the tauri-plugin-http capabilities.
- */
-export async function fetchFromUrl(url: string): Promise<LoadedFile> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Server responded ${response.status} ${response.statusText}`);
-  }
-  const contents = await response.text();
-  return { source: url, contents };
-}
-
-/**
- * Subscribes to file/URL opens from the OS (file association, share sheet, deep link).
- * On first call, also checks whether the app was launched with an initial URL.
+ * Subscribes to local file opens from the OS (file association/share sheet).
+ * On first call, also checks whether the app was launched with an initial file URL.
  * Returns an unsubscribe function.
  */
 export async function subscribeIncomingOpens(
@@ -96,12 +83,16 @@ export async function subscribeIncomingOpens(
   try {
     const initial = await getCurrent();
     if (initial && initial.length > 0) {
-      for (const url of initial) handler(url);
+      for (const url of initial) {
+        if (isLocalOpenTarget(url)) handler(url);
+      }
     }
   } catch {}
 
   const unlisten = await onOpenUrl((urls) => {
-    for (const url of urls) handler(url);
+    for (const url of urls) {
+      if (isLocalOpenTarget(url)) handler(url);
+    }
   });
 
   return unlisten;
@@ -118,7 +109,7 @@ async function webPickFile(): Promise<LoadedFile | null> {
   return new Promise((resolve) => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.screenjson,.json,application/json';
+    input.accept = '.json,application/json';
     input.onchange = async () => {
       const file = input.files?.[0];
       if (!file) return resolve(null);
@@ -128,4 +119,8 @@ async function webPickFile(): Promise<LoadedFile | null> {
     input.oncancel = () => resolve(null);
     input.click();
   });
+}
+
+function isLocalOpenTarget(target: string): boolean {
+  return target.startsWith('file://') || !/^[a-z][a-z0-9+.-]*:\/\//i.test(target);
 }

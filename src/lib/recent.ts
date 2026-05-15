@@ -8,12 +8,12 @@
  */
 
 export interface RecentEntry {
-  /** Display label: file name or URL origin + path. */
+  /** Display label: file name. */
   label: string;
-  /** Absolute path (desktop Tauri), URL (https), or null for name-only mobile/web picks. */
+  /** Absolute path (desktop Tauri), or null for name-only mobile/web picks. */
   target: string | null;
-  /** 'path' | 'url' | 'name' — determines how to reopen. */
-  kind: 'path' | 'url' | 'name';
+  /** Determines how to reopen. */
+  kind: 'path' | 'name';
   /** Timestamp of last open, for sorting. */
   lastOpened: number;
 }
@@ -30,7 +30,10 @@ export function loadRecents(): RecentEntry[] {
     return parsed
       .filter(
         (e): e is RecentEntry =>
-          e && typeof e.label === 'string' && typeof e.lastOpened === 'number'
+          e &&
+          typeof e.label === 'string' &&
+          typeof e.lastOpened === 'number' &&
+          (e.kind === 'path' || e.kind === 'name')
       )
       .sort((a, b) => b.lastOpened - a.lastOpened)
       .slice(0, MAX_ENTRIES);

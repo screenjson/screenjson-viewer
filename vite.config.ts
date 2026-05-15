@@ -15,6 +15,8 @@ const screenjsonUiRoot = path.resolve(__dirname, 'node_modules/screenjson-ui');
 const screenjsonUiSrc = path.join(screenjsonUiRoot, 'src/lib');
 const screenjsonUiCss = path.join(screenjsonUiRoot, 'src/app.css');
 const screenjsonUiCssShim = path.resolve(__dirname, 'src/lib/shims/screenjson-ui-app.css');
+const screenjsonUiFacade = path.resolve(__dirname, 'src/lib/shims/screenjson-ui.ts');
+const screenjsonUiNodeModules = path.join(screenjsonUiRoot, 'node_modules');
 
 function stripQuery(id: string): string {
   return id.split('?')[0];
@@ -51,8 +53,16 @@ export default defineConfig({
 
   resolve: {
     alias: [
-      // Consume screenjson-ui from source, not the built bundle.
-      { find: /^screenjson-ui$/, replacement: path.join(screenjsonUiSrc, 'index.ts') },
+      // Consume only the named source exports the native viewer uses. This avoids
+      // loading screenjson-ui's public barrel in WebKit, where its default
+      // re-export can fail during native ESM resolution.
+      { find: /^screenjson-ui$/, replacement: screenjsonUiFacade },
+      // screenjson-ui is installed as a nested source dependency. Point its CJS
+      // validator/crypto dependencies at concrete package roots so Vite can prebundle
+      // them into browser-safe ESM instead of serving raw CommonJS to WebKit.
+      { find: /^ajv$/, replacement: path.join(screenjsonUiNodeModules, 'ajv') },
+      { find: /^ajv-formats$/, replacement: path.join(screenjsonUiNodeModules, 'ajv-formats') },
+      { find: /^crypto-js$/, replacement: path.join(screenjsonUiNodeModules, 'crypto-js') },
       // Shim SvelteKit's $app/environment for the three source files that reference it.
       { find: /^\$app\/environment$/, replacement: path.resolve(__dirname, 'src/lib/shims/env.ts') }
     ]
@@ -84,6 +94,7 @@ export default defineConfig({
   // prebundle it runs esbuild over those files, which breaks parsing and skips our
   // $app/* aliases — see vite-plugin-svelte "optimizeDeps.exclude" for libraries.
   optimizeDeps: {
-    exclude: ['screenjson-ui']
+    exclude: ['screenjson-ui'],
+    include: ['ajv', 'ajv-formats', 'crypto-js']
   }
 });

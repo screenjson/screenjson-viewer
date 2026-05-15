@@ -1,4 +1,4 @@
-import { paginate } from 'screenjson-ui';
+import { collectDocumentLanguages, paginate } from 'screenjson-ui';
 import type { ScreenJSONDocument } from 'screenjson-ui';
 import { app } from '../state.svelte';
 import { parseAndValidate, unlockDocument } from './openDocument';
@@ -7,7 +7,6 @@ import { recordRecent } from '../recent';
 import {
   pickAndReadFile,
   readKnownFile,
-  fetchFromUrl,
   type LoadedFile
 } from '../platform';
 
@@ -17,6 +16,7 @@ function toReader(source: string, rawDocument: ScreenJSONDocument) {
   const document = normalizeDocument(rawDocument);
   const totalPages = safePageCount(document);
   app.screen = { kind: 'reader', source, document, totalPages };
+  app.setLang(collectDocumentLanguages(document)[0] ?? document.lang ?? 'en');
   app.currentPage = 1;
   app.chromeVisible = true;
 }
@@ -33,8 +33,6 @@ function safePageCount(doc: ScreenJSONDocument): number {
 function recordIfLoadable(loaded: LoadedFile) {
   if (loaded.path) {
     recordRecent({ label: loaded.source, target: loaded.path, kind: 'path' });
-  } else if (/^https?:/i.test(loaded.source)) {
-    recordRecent({ label: loaded.source, target: loaded.source, kind: 'url' });
   } else {
     recordRecent({ label: loaded.source, target: null, kind: 'name' });
   }
@@ -86,6 +84,15 @@ export async function openFromPicker() {
 }
 
 export async function openFromPath(path: string) {
+  if (/^https?:\/\//i.test(path)) {
+    app.screen = {
+      kind: 'error',
+      title: 'Remote files are blocked',
+      body: 'ScreenJSON Viewer only opens local JSON files.'
+    };
+    return;
+  }
+
   try {
     app.screen = { kind: 'loading', source: path };
     const loaded = await readKnownFile(path);
@@ -96,34 +103,6 @@ export async function openFromPath(path: string) {
       title: "Couldn't open that file",
       body: 'The file may have been moved, renamed, or deleted.',
       detail: err instanceof Error ? err.message : String(err)
-    };
-  }
-}
-
-export async function openFromUrl(url: string) {
-  app.screen = { kind: 'loading', source: url };
-  let loaded: LoadedFile;
-  try {
-    loaded = await fetchFromUrl(url);
-  } catch (err) {
-    app.screen = {
-      kind: 'error',
-      title: "Couldn't fetch that URL",
-      body:
-        "The server didn't respond, the address is wrong, or the page isn't shareable across origins. Check the link and your connection.",
-      detail: err instanceof Error ? err.message : String(err)
-    };
-    return;
-  }
-  try {
-    handleLoaded(loaded);
-  } catch (err) {
-    console.error('[screenjson-viewer] handleLoaded failed:', err);
-    app.screen = {
-      kind: 'error',
-      title: "Couldn't open that script",
-      body: 'An unexpected error happened while processing the file.',
-      detail: err instanceof Error ? `${err.message}\n\n${err.stack ?? ''}` : String(err)
     };
   }
 }

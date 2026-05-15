@@ -14,10 +14,10 @@
     "windows": [
       {
         "title": "ScreenJSON Viewer",
-        "width": 1000,
-        "height": 720,
+        "width": 760,
+        "height": 1080,
         "minWidth": 360,
-        "minHeight": 480,
+        "minHeight": 640,
         "resizable": true,
         "fullscreen": false,
         "decorations": true,
@@ -27,19 +27,6 @@
     ],
     "security": {
       "csp": null
-    }
-  },
-  "plugins": {
-    "deep-link": {
-      "mobile": [
-        {
-          "host": "open.screenjson.com",
-          "pathPrefix": ["/script"]
-        }
-      ],
-      "desktop": {
-        "schemes": ["screenjson"]
-      }
     }
   },
   "bundle": {
@@ -57,18 +44,11 @@
     "longDescription": "A simple cross-platform viewer for ScreenJSON screenplay files. Open, read, and print screenplays on iPhone, Android, Windows, macOS, and Linux.",
     "fileAssociations": [
       {
-        "ext": ["screenjson"],
+        "ext": ["json"],
         "name": "ScreenJSON Screenplay",
-        "description": "ScreenJSON screenplay file",
+        "description": "ScreenJSON screenplay JSON file",
         "role": "Viewer",
         "mimeType": "application/vnd.screenjson+json"
-      },
-      {
-        "ext": ["json"],
-        "name": "JSON Document",
-        "description": "JSON document (may be a ScreenJSON screenplay)",
-        "role": "Viewer",
-        "mimeType": "application/json"
       }
     ],
     "macOS": {
