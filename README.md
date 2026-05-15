@@ -6,6 +6,10 @@ Built as a single Tauri 2 app targeting **iOS, Android, Windows, macOS, and Linu
 
 Released as a reference implementation under the MIT license.
 
+![Light mode](screenjson-viewer_light_mode.png)
+
+![Dark mode](screenjson-viewer_dark_mode.png)
+
 ## What it does
 
 - Opens local `.json` ScreenJSON files by picker, drag-and-drop, or by tapping/double-clicking a file the OS routes to the app.
