@@ -1,6 +1,6 @@
 # ScreenJSON Viewer
 
-A simple, cross-platform reader for [ScreenJSON](https://screenjson.com) screenplay files. Think "Acrobat Reader, but for screenplays."
+A simple, cross-platform reader for [ScreenJSON](https://screenjson.com) screenplay files.
 
 Built as a single Tauri 2 app targeting **iOS, Android, Windows, macOS, and Linux** — one codebase, one webview, five platforms. Reuses the [`screenjson-ui`](https://github.com/screenjson/screenjson-ui) library for all rendering, pagination, validation, and decryption.
 
@@ -20,7 +20,7 @@ Released as a reference implementation under the MIT license.
 - Remembers recent files.
 - Responsive by design: mobile reflows to viewport-width with proportional indents and readable body font; desktop uses the traditional centered-on-workspace paper metaphor.
 - Dark/light mode, zoom, responsive layout, and system print dialog.
-- No editing, no export, no upload. Read-only by design.
+- No editing, no export, url internet content, no upload. Read-only by design.
 
 ## Relationship to `screenjson-ui`
 
@@ -71,15 +71,6 @@ npm link screenjson-ui
 ```
 
 `npm link screenjson-ui` **without** running `npm link` first in a local `screenjson-ui` clone will try the public npm registry and fail with `404` — that package is not published to npm; the default install path is the GitHub tarball in [package.json](package.json).
-
-### Library edits made by this project
-
-Changes originating in the viewer work that have been committed into the `screenjson-ui` library. Every entry here represents a library edit — worth reviewing when bumping the library version.
-
-| Change | Library files | Reason |
-| --- | --- | --- |
-| Added `TitlePage` component | `src/lib/components/TitlePage.svelte` (new), `src/lib/index.ts` (new export) | Traditional screenplay cover page (title, authors, logline, sources, contributors, genres). Available to any embedder, not just this viewer. Respects the library's `--font-screenplay` / `--color-paper` tokens and includes a desktop "shadowed card" layout at `min-width: 1024px`. |
-| Removed inter-tag whitespace in `Slugline.svelte` | `src/lib/components/elements/Slugline.svelte` | `.sp-element` sets `white-space: pre-wrap`, which was preserving the newlines/indentation between Svelte's `{#if}` blocks and the `<span>{text}</span>`. This injected a leading space before the slug text, offsetting the first wrapped line by ~9px on narrow viewports. Template now has no source-level whitespace between siblings; behavior is identical to before for single-line slugs, fixed for wrapped slugs. |
 
 ## The dialogue normalizer — a caveat
 
