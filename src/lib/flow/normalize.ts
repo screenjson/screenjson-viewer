@@ -8,7 +8,7 @@
  * untouched.
  */
 
-import type { ScreenJSONDocument } from 'screenjson-ui';
+import type { ScreenJSONDocument } from '@screenjson/ui';
 
 type BodyElement = {
   type?: string;

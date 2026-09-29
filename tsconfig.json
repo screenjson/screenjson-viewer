@@ -17,7 +17,7 @@
     "types": ["svelte", "vite/client", "node"],
     "baseUrl": ".",
     "paths": {
-      "screenjson-ui": ["src/lib/shims/screenjson-ui.ts"],
+      "@screenjson/ui": ["src/lib/shims/screenjson-ui.ts"],
       "$app/environment": ["src/lib/shims/env.ts"]
     }
   },

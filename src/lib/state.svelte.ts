@@ -1,4 +1,4 @@
-import type { Lang, ScreenJSONDocument } from 'screenjson-ui';
+import type { Lang, ScreenJSONDocument } from '@screenjson/ui';
 
 export type Theme = 'light' | 'dark';
 

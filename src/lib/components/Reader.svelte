@@ -7,7 +7,7 @@
     ScreenJSONViewer,
     TitlePage,
     type ScreenJSONDocument
-  } from 'screenjson-ui';
+  } from '@screenjson/ui';
   import { app } from '../state.svelte';
   import TopBar from './TopBar.svelte';
   import PageSlider from './PageSlider.svelte';

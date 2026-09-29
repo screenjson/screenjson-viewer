@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { app } from '../state.svelte';
   import { print } from '../platform';
-  import { getUiStrings, type Lang, type LanguageOption } from 'screenjson-ui';
+  import { getUiStrings, type Lang, type LanguageOption } from '@screenjson/ui';
 
   let {
     source,

@@ -10,6 +10,8 @@ Released as a reference implementation under the MIT license.
 
 ![Dark mode](screenjson-viewer_dark_mode.png)
 
+![iOS](screenjson-viewer-mobile.png)
+
 ## What it does
 
 - Opens local `.json` ScreenJSON files by picker, drag-and-drop, or by tapping/double-clicking a file the OS routes to the app.
@@ -81,27 +83,7 @@ The normalizer ([normalize.ts](src/lib/flow/normalize.ts)) merges runs of consec
 - **Joins mid-word hyphenation** (`"seven-"` + `"letter"` → `"seven-letter"`) and otherwise space-joins.
 - **One known tradeoff:** a screenwriter who *intentionally* splits a cue into two dialogue elements for dramatic effect would see those merged. If your files rely on intentional multi-element dialogue, disable the normalizer by removing the `normalizeDocument()` call in [openAndRoute.ts](src/lib/flow/openAndRoute.ts).
 
-## Project layout
 
-```
-screenjson-viewer/
-├── src/                    # Vite + Svelte 5 webview UI
-│   ├── App.svelte          # top-level state router
-│   ├── main.ts
-│   └── lib/
-│       ├── state.svelte.ts # app state (Svelte 5 runes)
-│       ├── platform/       # Tauri file/dialog/deep-link abstraction
-│       ├── flow/           # validate → decrypt → route
-│       └── components/     # Home, Reader, PageSlider, TopBar, …
-├── src-tauri/              # Rust shell (one project, five targets)
-│   ├── src/lib.rs          # Tauri entry; plugin wiring
-│   ├── tauri.conf.json     # bundle + file associations
-│   ├── capabilities/       # plugin permissions
-│   └── icons/
-├── index.html
-├── vite.config.ts
-└── package.json
-```
 
 ## Prerequisites
 

@@ -4,7 +4,7 @@ import {
   hasEncryptedContent,
   decryptDocument,
   type ScreenJSONDocument
-} from 'screenjson-ui';
+} from '@screenjson/ui';
 
 export type OpenResult =
   | { kind: 'ready'; document: ScreenJSONDocument }

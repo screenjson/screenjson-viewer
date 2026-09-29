@@ -1,4 +1,4 @@
-// Viewer-local facade for the pieces used from screenjson-ui.
+// Viewer-local facade for the pieces used from @screenjson/ui.
 //
 // Tauri's WebKit runtime can reject the upstream public barrel while Vite is
 // serving source modules because that barrel exposes a default re-export. The
@@ -10,37 +10,37 @@ import {
   getLanguageOption,
   getLanguageOptions,
   getUiStrings
-} from '../../../node_modules/screenjson-ui/src/lib/i18n/languages';
+} from '../../../node_modules/@screenjson/ui/src/lib/i18n/languages';
 
 export { collectDocumentLanguages, getLanguageOption, getLanguageOptions, getUiStrings };
 
-export { default as ScreenJSONViewer } from '../../../node_modules/screenjson-ui/src/lib/components/Viewer.svelte';
-export { default as TitlePage } from '../../../node_modules/screenjson-ui/src/lib/components/TitlePage.svelte';
+export { default as ScreenJSONViewer } from '../../../node_modules/@screenjson/ui/src/lib/components/Viewer.svelte';
+export { default as TitlePage } from '../../../node_modules/@screenjson/ui/src/lib/components/TitlePage.svelte';
 
-export { paginate } from '../../../node_modules/screenjson-ui/src/lib/services/paginator';
+export { paginate } from '../../../node_modules/@screenjson/ui/src/lib/services/paginator';
 export type {
   Page as PageData,
   PaginatedElement,
   PaginationResult
-} from '../../../node_modules/screenjson-ui/src/lib/services/paginator';
+} from '../../../node_modules/@screenjson/ui/src/lib/services/paginator';
 
 export {
   validateDocument,
   isScreenJSONDocument,
   formatValidationErrors
-} from '../../../node_modules/screenjson-ui/src/lib/validation/validator';
+} from '../../../node_modules/@screenjson/ui/src/lib/validation/validator';
 export type {
   ValidationResult,
   ValidationError
-} from '../../../node_modules/screenjson-ui/src/lib/validation/validator';
+} from '../../../node_modules/@screenjson/ui/src/lib/validation/validator';
 
 export {
   hasEncryptedContent,
   decryptDocument,
   decryptText
-} from '../../../node_modules/screenjson-ui/src/lib/services/crypto';
+} from '../../../node_modules/@screenjson/ui/src/lib/services/crypto';
 
-export type { LanguageOption, UiStrings } from '../../../node_modules/screenjson-ui/src/lib/i18n/languages';
+export type { LanguageOption, UiStrings } from '../../../node_modules/@screenjson/ui/src/lib/i18n/languages';
 
 export type {
   ScreenJSONDocument,
@@ -62,4 +62,4 @@ export type {
   Text,
   Name,
   UUID
-} from '../../../node_modules/screenjson-ui/src/lib/types/screenjson';
+} from '../../../node_modules/@screenjson/ui/src/lib/types/screenjson';

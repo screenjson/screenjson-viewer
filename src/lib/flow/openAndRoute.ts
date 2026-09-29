@@ -1,5 +1,5 @@
-import { collectDocumentLanguages, paginate } from 'screenjson-ui';
-import type { ScreenJSONDocument } from 'screenjson-ui';
+import { collectDocumentLanguages, paginate } from '@screenjson/ui';
+import type { ScreenJSONDocument } from '@screenjson/ui';
 import { app } from '../state.svelte';
 import { parseAndValidate, unlockDocument } from './openDocument';
 import { normalizeDocument } from './normalize';

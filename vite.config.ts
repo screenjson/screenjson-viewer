@@ -7,11 +7,11 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const host = process.env.TAURI_DEV_HOST;
 
-// Resolve the screenjson-ui GitHub source dependency from node_modules. Using
+// Resolve the published @screenjson/ui source package from node_modules. Using
 // source (not the compiled bundle) avoids the two-Svelte-runtimes problem that
 // causes `effect_orphan` errors when a bundled Svelte component tries to mount
 // inside our Svelte app.
-const screenjsonUiRoot = path.resolve(__dirname, 'node_modules/screenjson-ui');
+const screenjsonUiRoot = path.resolve(__dirname, 'node_modules/@screenjson/ui');
 const screenjsonUiSrc = path.join(screenjsonUiRoot, 'src/lib');
 const screenjsonUiCss = path.join(screenjsonUiRoot, 'src/app.css');
 const screenjsonUiCssShim = path.resolve(__dirname, 'src/lib/shims/screenjson-ui-app.css');
@@ -54,10 +54,10 @@ export default defineConfig({
   resolve: {
     alias: [
       // Consume only the named source exports the native viewer uses. This avoids
-      // loading screenjson-ui's public barrel in WebKit, where its default
+      // loading @screenjson/ui's public barrel in WebKit, where its default
       // re-export can fail during native ESM resolution.
-      { find: /^screenjson-ui$/, replacement: screenjsonUiFacade },
-      // screenjson-ui is installed as a nested source dependency. Point its CJS
+      { find: /^@screenjson\/ui$/, replacement: screenjsonUiFacade },
+      // @screenjson/ui is installed as a source-capable package. Point its CJS
       // validator/crypto dependencies at concrete package roots so Vite can prebundle
       // them into browser-safe ESM instead of serving raw CommonJS to WebKit.
       { find: /^ajv$/, replacement: path.join(screenjsonUiNodeModules, 'ajv') },
@@ -90,11 +90,11 @@ export default defineConfig({
 
   envPrefix: ['VITE_', 'TAURI_ENV_*'],
 
-  // screenjson-ui is consumed from source (Svelte 5 runes, .svelte.ts). Letting Vite
+  // @screenjson/ui is consumed from source (Svelte 5 runes, .svelte.ts). Letting Vite
   // prebundle it runs esbuild over those files, which breaks parsing and skips our
   // $app/* aliases — see vite-plugin-svelte "optimizeDeps.exclude" for libraries.
   optimizeDeps: {
-    exclude: ['screenjson-ui'],
+    exclude: ['@screenjson/ui'],
     include: ['ajv', 'ajv-formats', 'crypto-js']
   }
 });
